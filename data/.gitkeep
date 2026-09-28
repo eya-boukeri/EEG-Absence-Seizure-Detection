@@ -1,0 +1,2 @@
+# Conserver le dossier data/ dans le dépôt Git
+# Note : Placer les fichiers CSV volumineux d'enregistrements EEG (_0000d.csv et _0000h.csv) dans ce dossier.

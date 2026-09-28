@@ -1,0 +1,29 @@
+# Environnement virtuel Python
+.venv/
+venv/
+env/
+ENV/
+
+# Caches Python et Notebooks
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Fichiers de données volumineux (> 100 Mo rejetés par GitHub)
+# Les signaux EEG bruts (.csv) font entre 100 Mo et 380 Mo chacun
+data/*.csv
+data/**/*.csv
+
+# Fichiers temporaires et sorties
+output/*
+!output/.gitkeep
+*.log
+
+# Fichiers système & IDE
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
