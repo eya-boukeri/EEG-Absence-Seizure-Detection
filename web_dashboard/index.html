@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroMining — Détection des Crises d'Absence EEG</title>
+  <meta name="description" content="Plateforme biomédicale de data mining et d'apprentissage automatique pour la détection automatique des crises d'absence sur signaux EEG multi-canaux.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="pulse-icon">
+          <span class="pulse-ring"></span>
+          <span class="pulse-dot"></span>
+        </div>
+        <div class="brand-text">
+          <h1>NeuroMining <span class="badge-tag">EEG Analytics</span></h1>
+          <p>Plateforme Biomédicale de Détection des Crises d'Absence</p>
+        </div>
+      </div>
+      <div class="telemetry-bar">
+        <div class="telemetry-pill">
+          <span class="pill-label">Patient :</span>
+          <span class="pill-val" id="dispPatientId">210504B-C</span>
+        </div>
+        <div class="telemetry-pill">
+          <span class="pill-label">Début Tracé :</span>
+          <span class="pill-val" id="dispDebutTrace">12:50:58</span>
+        </div>
+        <div class="telemetry-pill">
+          <span class="pill-label">Éch. :</span>
+          <span class="pill-val">256 Hz</span>
+        </div>
+        <div class="telemetry-pill">
+          <span class="pill-label">Durée :</span>
+          <span class="pill-val" id="dispDuration">52.0 min</span>
+        </div>
+        <div class="telemetry-pill highlight">
+          <span class="pill-label">Crises documentées :</span>
+          <span class="pill-val" id="dispNbCrises">12 enregistrées</span>
+        </div>
+        <div class="telemetry-pill">
+          <span class="pill-label">Features :</span>
+          <span class="pill-val" id="dispNbFeatures">294 variables</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Pipeline Flow Stepper Bar -->
+    <nav class="pipeline-flow-bar" aria-label="Étapes du pipeline de données">
+      <div class="stepper-item active done" id="stepPill1" data-step="1">
+        <span class="step-num">1</span>
+        <div class="step-meta">
+          <span class="step-title">1. Dépôt & Données</span>
+          <span class="step-sub">Fichiers Signal & Annotations</span>
+        </div>
+      </div>
+      <span class="stepper-arrow">➔</span>
+      <div class="stepper-item active done" id="stepPill2" data-step="2">
+        <span class="step-num">2</span>
+        <div class="step-meta">
+          <span class="step-title">2. Nettoyage & Synchro</span>
+          <span class="step-sub">DebutTrace, Durées & Cible</span>
+        </div>
+      </div>
+      <span class="stepper-arrow">➔</span>
+      <div class="stepper-item active done" id="stepPill3" data-step="3">
+        <span class="step-num">3</span>
+        <div class="step-meta">
+          <span class="step-title">3. Extraction 294 Features</span>
+          <span class="step-sub">Spatiotemporel + Ratios SDR</span>
+        </div>
+      </div>
+      <span class="stepper-arrow">➔</span>
+      <div class="stepper-item active done" id="stepPill4" data-step="4">
+        <span class="step-num">4</span>
+        <div class="step-meta">
+          <span class="step-title">4. Modélisation ML</span>
+          <span class="step-sub">RF, SVM, KNN, CART + SMOTE</span>
+        </div>
+      </div>
+      <span class="stepper-arrow">➔</span>
+      <div class="stepper-item active done" id="stepPill5" data-step="5">
+        <span class="step-num">5</span>
+        <div class="step-meta">
+          <span class="step-title">5. Tracé & Diagnostic</span>
+          <span class="step-sub">Reconstruction & Évaluation</span>
+        </div>
+      </div>
+      <div class="stepper-actions">
+        <button id="btnRunFullPipeline" class="btn-stepper-primary" title="Exécuter toutes les étapes automatiquement">
+          <span class="pulse-spark">⚡</span> Pipeline 1-Clic
+        </button>
+        <button id="btnResetPipeline" class="btn-stepper-ghost" title="Réinitialiser le cache pour un nouveau traitement">
+          🔄 Réinitialiser
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Layout -->
+    <main class="main-layout">
+      <!-- Left Column: Step Controls & Configuration -->
+      <aside class="sidebar-panel">
+
+        <!-- ÉTAPE 1 : Dépôt & Sélection des Fichiers -->
+        <div class="panel-section" id="sectionStep1">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <h2 class="section-title" style="margin-bottom: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              1. Dépôt des Fichiers
+            </h2>
+            <span class="step-badge-indicator done" id="badgeStep1">Prêt ✓</span>
+          </div>
+
+          <!-- Drag and Drop Zone -->
+          <div class="drop-zone" id="dropZone" title="Cliquez ou déposez vos fichiers ici">
+            <div class="drop-icon">📁</div>
+            <p class="drop-prompt">
+              <strong>Glissez vos fichiers EEG ici</strong><br>
+              <span class="drop-sub">Signal (*_0000d.csv) & Annotations (*.xlsx)</span>
+            </p>
+            <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls" style="display:none;">
+            <button type="button" class="btn-browse" id="btnBrowse">Parcourir les fichiers</button>
+          </div>
+
+          <!-- Dataset selector -->
+          <div class="form-group" style="margin-top: 10px;">
+            <label for="datasetSelect">Patient / Jeu de données sélectionné :</label>
+            <div class="select-wrapper">
+              <select id="datasetSelect">
+                <option value="210504B_C_0000" selected>Patient 210504B-C (Actuel, 281 Mo, 12 crises)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="uploadedFilesList">
+            <div class="upload-file-pill">
+              <span class="file-name">210504B_C_0000d.csv</span>
+              <span class="file-size">281 Mo (Signal brut)</span>
+            </div>
+            <div class="upload-file-pill">
+              <span class="file-name">Annotations MAJ.xlsx</span>
+              <span class="file-size">DebutTrace 12:50:58</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ÉTAPE 2 : Nettoyage & Synchronisation -->
+        <div class="panel-section" id="sectionStep2">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <h2 class="section-title" style="margin-bottom: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              2. Nettoyage & Synchro
+            </h2>
+            <span class="step-badge-indicator done" id="badgeStep2">Nettoyé ✓</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+            Conversion du format large vers série temporelle continue, calcul des durées réelles (<span style="color:var(--cyan);">Fin − Début</span>) et synchronisation via <strong style="color:var(--cyan);">DebutTrace</strong>.
+          </p>
+          <div class="step-action-row">
+            <button id="btnRunClean" class="btn-step-action">
+              <span>🧹</span> Ré-exécuter le Nettoyage
+            </button>
+          </div>
+        </div>
+
+        <!-- ÉTAPE 3 : Extraction des Caractéristiques -->
+        <div class="panel-section" id="sectionStep3">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <h2 class="section-title" style="margin-bottom: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              3. Extraction des Features
+            </h2>
+            <span class="step-badge-indicator done" id="badgeStep3">294 Extraites ✓</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+            Segmentation en fenêtres de <strong>2.0 s (50% recouvrement)</strong>. 252 features spatiotemporelles + <strong>42 ratios spectraux neurophysiologiques (SDR & RelDelta)</strong>.
+          </p>
+          <div class="step-action-row">
+            <button id="btnRunExtract" class="btn-step-action">
+              <span>🧬</span> Recalculer les 294 Features
+            </button>
+          </div>
+        </div>
+
+        <!-- ÉTAPE 4 : Modèle de Machine Learning & Améliorations -->
+        <div class="panel-section" id="sectionStep4">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <h2 class="section-title" style="margin-bottom: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              4. Choix & Entraînement ML
+            </h2>
+            <span class="step-badge-indicator done" id="badgeStep4">Entraîné ✓</span>
+          </div>
+
+          <!-- Choix du canal d'entrée -->
+          <div class="form-group">
+            <label for="channelSelect">Périmètre spatial d'apprentissage :</label>
+            <div class="select-wrapper">
+              <select id="channelSelect">
+                <option value="ALL" selected>⭐ TOUS LES CANAUX SIMULTANÉS (294 features) [Recommandé]</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Anatomical Group Filter Chips -->
+          <div class="filter-chips" id="lobeFilters" style="margin-top: 4px;">
+            <button class="chip active" data-lobe="ALL">Tous</button>
+            <button class="chip" data-lobe="Frontal">Frontal</button>
+            <button class="chip" data-lobe="Central">Central</button>
+            <button class="chip" data-lobe="Temporal">Temporal</button>
+            <button class="chip" data-lobe="Pariétal">Pariétal</button>
+            <button class="chip" data-lobe="Occipital">Occipital</button>
+            <button class="chip" data-lobe="Polygraphie">Polygraphie</button>
+          </div>
+
+          <!-- Electrode Info Card -->
+          <div class="info-card" id="channelInfoCard" style="margin-top: 8px;">
+            <div class="info-card-header">
+              <span class="electrode-badge" id="cardChannelBadge">ALL (21 canaux)</span>
+              <span class="lobe-badge" id="cardLobeBadge">Multi-Canaux Global</span>
+            </div>
+            <p class="info-card-desc" id="cardChannelDesc">Modèle multi-électrodes combinant 21 canaux (19 EEG standard + SLI + ECG) avec 294 variables spatiotemporelles et spectrales.</p>
+          </div>
+
+          <!-- Choix du Modèle -->
+          <div class="form-group" style="margin-top: 10px;">
+            <label for="modelSelect">Algorithme d'apprentissage automatique :</label>
+            <div class="select-wrapper">
+              <select id="modelSelect">
+                <option value="Random Forest" selected>🌲 Random Forest (100 arbres, pondéré)</option>
+                <option value="SVM">⚡ Support Vector Machine (Noyau RBF)</option>
+                <option value="KNN">📍 K-Nearest Neighbors (k=5, pondéré)</option>
+                <option value="Decision Tree">🌿 Decision Tree (Arbre CART)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Options d'améliorations cliniques -->
+          <div class="form-group" style="margin-top: 10px;">
+            <label style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; display: block;">Améliorations cliniques appliquées (Partie XII) :</label>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="chkSMOTE" checked style="accent-color: var(--accent);">
+                <span>✨ Rééquilibrage SMOTE (Frontières nettes)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="chkTemporal" checked style="accent-color: var(--accent);">
+                <span>🛡️ Post-filtrage temporel clinique (Hystérésis &gt; 2s)</span>
+              </label>
+            </div>
+          </div>
+
+          <button id="btnTrain" class="btn-primary" style="margin-top: 12px;">
+            <span class="btn-spinner" id="trainSpinner"></span>
+            <span class="btn-icon">⚡</span>
+            <span class="btn-text">Entraîner le modèle choisi</span>
+          </button>
+        </div>
+
+        <!-- Accès Rapide aux Crises Documentées -->
+        <div class="panel-section">
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Accès Rapide aux 12 Crises
+          </h2>
+          <div class="seizure-quick-list" id="seizureQuickList">
+            <!-- Dynamically generated -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center & Right Column: Interactive Waveform & Diagnostics -->
+      <section class="content-panel">
+
+        <!-- Visualiseur de Signal Haute Résolution -->
+        <div class="card signal-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>Tracé Temporel Interactif — <span class="cyan-text" id="curSignalChannel">EEGFp1</span></h3>
+              <p class="card-subtitle">Navigation continue, zoom temporel et surlignage des crises épileptiques réelles et détectées</p>
+            </div>
+            <div class="viewer-toolbar">
+              <button class="tool-btn" id="btnZoomOut" title="Dézoomer">−</button>
+              <button class="tool-btn" id="btnZoomIn" title="Zoomer">+</button>
+              <button class="tool-btn" id="btnResetZoom" title="Vue complète">Vue 100%</button>
+              <button class="tool-btn" id="btnZoomCrisis1" title="Zoomer sur la Crise n°1 (0s)">Zoom Crise 1 (0s)</button>
+              <button class="tool-btn highlight" id="btnZoomCrisis8" title="Zoomer sur la Crise n°8 (Absence annotée à 1465.5s)">Zoom Crise 8 (1460s)</button>
+            </div>
+          </div>
+
+          <div class="signal-legend">
+            <div class="legend-item"><span class="legend-dot signal-line"></span> Tracé EEG brut (µV)</div>
+            <div class="legend-item"><span class="legend-dot crisis-gt"></span> Crise Réelle (Vérité Terrain)</div>
+            <div class="legend-item"><span class="legend-dot crisis-pred"></span> Détection Modèle ML</div>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="canvas-wrapper">
+            <canvas id="eegCanvas"></canvas>
+            <div class="canvas-crosshair-info" id="crosshairInfo">Temps: 0.0s | Amplitude: 0.0 µV</div>
+          </div>
+          <div class="canvas-timeline-hint">
+            💡 <em>Astuce : Utilisez la molette de la souris pour zoomer dans le temps, ou cliquez-glissez pour vous déplacer dans l'enregistrement.</em>
+          </div>
+        </div>
+
+        <!-- Model Evaluation Dashboard -->
+        <div class="card results-card" id="resultsSection">
+          <div class="card-header">
+            <div>
+              <h3>Diagnostic Biomédical — <span class="cyan-text" id="resModelName">Random Forest</span> (<span class="emerald-text" id="resChannelName">Multi-Canaux 294 features</span>)</h3>
+              <p class="card-subtitle" id="resInterpretationText">Évaluation supervisée sur 624 fenêtres de test indépendantes (20%).</p>
+            </div>
+            <div class="res-status-badge" id="resGlobalStatus">Performance Optimale ✓</div>
+          </div>
+
+          <!-- Metrics KPI Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card glow-cyan">
+              <div class="metric-header">
+                <span class="metric-title">Recall (Sensibilité)</span>
+                <span class="badge-priority">Priorité Clinique</span>
+              </div>
+              <div class="metric-value" id="valRecall">86.2%</div>
+              <div class="metric-footer">Capacité à ne rater aucune crise médicale</div>
+              <div class="metric-bar-bg"><div class="metric-bar-fill fill-cyan" id="barRecall" style="width: 86.2%;"></div></div>
+            </div>
+
+            <div class="metric-card glow-purple">
+              <div class="metric-header">
+                <span class="metric-title">F1-Score</span>
+                <span class="badge-balanced">Équilibre P/R</span>
+              </div>
+              <div class="metric-value" id="valF1">89.3%</div>
+              <div class="metric-footer">Moyenne harmonique Sensibilité & Précision</div>
+              <div class="metric-bar-bg"><div class="metric-bar-fill fill-purple" id="barF1" style="width: 89.3%;"></div></div>
+            </div>
+
+            <div class="metric-card glow-emerald">
+              <div class="metric-header">
+                <span class="metric-title">Précision</span>
+                <span class="badge-info">Fiabilité</span>
+              </div>
+              <div class="metric-value" id="valPrecision">92.6%</div>
+              <div class="metric-footer">Proportion de vraies crises parmi les alertes</div>
+              <div class="metric-bar-bg"><div class="metric-bar-fill fill-emerald" id="barPrecision" style="width: 92.6%;"></div></div>
+            </div>
+
+            <div class="metric-card glow-amber">
+              <div class="metric-header">
+                <span class="metric-title">Accuracy Globale</span>
+                <span class="badge-warning">Biais Classe</span>
+              </div>
+              <div class="metric-value" id="valAccuracy">99.0%</div>
+              <div class="metric-footer">Taux global de classification correcte</div>
+              <div class="metric-bar-bg"><div class="metric-bar-fill fill-amber" id="barAccuracy" style="width: 99.0%;"></div></div>
+            </div>
+          </div>
+
+          <!-- Dual Column: Confusion Matrix & FFT Spectrum -->
+          <div class="dual-analytics-grid">
+            <!-- Confusion Matrix Card -->
+            <div class="analytics-box">
+              <h4 class="box-title">Matrice de Confusion (Jeu de Test : 624 fenêtres)</h4>
+              <div class="cm-table-wrapper">
+                <div class="cm-grid">
+                  <div class="cm-cell cm-header"></div>
+                  <div class="cm-cell cm-header-col">Prédit : Sain (0)</div>
+                  <div class="cm-cell cm-header-col">Prédit : Crise (1)</div>
+
+                  <div class="cm-cell cm-header-row">Réel : Sain (0)</div>
+                  <div class="cm-cell cm-val cell-vn">
+                    <span class="cm-num" id="cmVN">593</span>
+                    <span class="cm-lbl">Vrais Négatifs (VN)</span>
+                  </div>
+                  <div class="cm-cell cm-val cell-fp">
+                    <span class="cm-num" id="cmFP">2</span>
+                    <span class="cm-lbl">Faux Positifs (FP)</span>
+                  </div>
+
+                  <div class="cm-cell cm-header-row">Réel : Crise (1)</div>
+                  <div class="cm-cell cm-val cell-fn">
+                    <span class="cm-num" id="cmFN">4</span>
+                    <span class="cm-lbl">Faux Négatifs (FN)</span>
+                  </div>
+                  <div class="cm-cell cm-val cell-vp">
+                    <span class="cm-num" id="cmVP">25</span>
+                    <span class="cm-lbl">Vrais Positifs (VP)</span>
+                  </div>
+                </div>
+              </div>
+              <p class="analytics-note" id="cmClinicalComment">
+                Seulement 2 faux positifs sur l'enregistrement grâce au post-filtrage temporel et au rééquilibrage SMOTE.
+              </p>
+            </div>
+
+            <!-- FFT Spectrum Card -->
+            <div class="analytics-box">
+              <h4 class="box-title">Densité Spectrale FFT (Sain vs Crise) — Pic Épileptique 3 Hz</h4>
+              <div class="fft-canvas-container">
+                <canvas id="fftCanvas"></canvas>
+              </div>
+              <div class="fft-legend">
+                <span><span class="dot-blue"></span> Signal Sain (Alpha/Fond)</span>
+                <span><span class="dot-red"></span> En Crise (Surpuissance Delta 3 Hz)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progression Comparative Table -->
+          <div class="analytics-box progression-table-card">
+            <h4 class="box-title">Synthèse Comparative de la Progression (Partie XII — Améliorations Concrètes)</h4>
+            <div class="table-scroll">
+              <table class="table-progression">
+                <thead>
+                  <tr>
+                    <th>Étape du Pipeline</th>
+                    <th>Descripteurs</th>
+                    <th>Accuracy</th>
+                    <th>Précision</th>
+                    <th>Rappel</th>
+                    <th>F1-Score</th>
+                    <th>Faux Positifs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>1. Mono-Canal Initial</strong> (EEGFp1)</td>
+                    <td>12</td>
+                    <td>95.99 %</td>
+                    <td>55.00 %</td>
+                    <td>75.86 %</td>
+                    <td>63.77 %</td>
+                    <td>18 FP</td>
+                  </tr>
+                  <tr>
+                    <td><strong>2. Multi-Canaux Brut</strong> (21 canaux)</td>
+                    <td>252</td>
+                    <td>98.24 %</td>
+                    <td>80.00 %</td>
+                    <td>82.76 %</td>
+                    <td>81.36 %</td>
+                    <td>6 FP</td>
+                  </tr>
+                  <tr>
+                    <td><strong>3. Multi-Canaux + Ratios + SMOTE</strong></td>
+                    <td>294</td>
+                    <td>98.40 %</td>
+                    <td>82.76 %</td>
+                    <td>82.76 %</td>
+                    <td>82.76 %</td>
+                    <td>5 FP</td>
+                  </tr>
+                  <tr class="highlight-final">
+                    <td><strong>4. Système Optimisé Final (+ Post-Filtrage)</strong></td>
+                    <td><strong>294</strong></td>
+                    <td><strong>99.04 %</strong></td>
+                    <td><strong>92.59 %</strong></td>
+                    <td><strong>86.21 %</strong></td>
+                    <td><strong>89.29 %</strong></td>
+                    <td><strong>2 FP (Éradication)</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Feature Importance & Detected Seizures -->
+          <div class="dual-analytics-grid" style="margin-top: 1.25rem;">
+            <!-- Feature Importance -->
+            <div class="analytics-box">
+              <h4 class="box-title">Importance des Descripteurs (Poids Décisionnel)</h4>
+              <div class="feature-importance-list" id="featureImportanceList">
+                <!-- Dynamically generated bars -->
+              </div>
+            </div>
+
+            <!-- Reconstructed Seizures Table -->
+            <div class="analytics-box">
+              <h4 class="box-title">Intervalles Temporels de Crises Reconstruits par le Modèle</h4>
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Début Prédit</th>
+                      <th>Fin Prédite</th>
+                      <th>Durée</th>
+                      <th>Statut Clinique</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detectedSeizuresBody">
+                    <!-- Dynamically generated rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Floating Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
