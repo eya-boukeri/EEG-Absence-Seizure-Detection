@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=comfort2">
 </head>
 <body>
   <div class="app-container">
@@ -49,6 +49,10 @@
           <span class="pill-label">Features :</span>
           <span class="pill-val" id="dispNbFeatures">294 variables</span>
         </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Basculer Mode Sombre Reposant / Mode Clair Médical">
+          <span id="themeToggleIcon">🌙</span>
+          <span id="themeToggleText">Mode Reposant</span>
+        </button>
       </div>
     </header>
 
@@ -234,22 +238,74 @@
             <label for="modelSelect">Algorithme d'apprentissage automatique :</label>
             <div class="select-wrapper">
               <select id="modelSelect">
-                <option value="Random Forest" selected>🌲 Random Forest (100 arbres, pondéré)</option>
-                <option value="SVM">⚡ Support Vector Machine (Noyau RBF)</option>
-                <option value="KNN">📍 K-Nearest Neighbors (k=5, pondéré)</option>
-                <option value="Decision Tree">🌿 Decision Tree (Arbre CART)</option>
+                <optgroup label="🌲 Machine Learning Tabulaire (Features expertes)">
+                  <option value="Random Forest" selected>🌲 Random Forest (100 arbres, pondéré) [Recommandé Clinique]</option>
+                  <option value="XGBoost">🔥 XGBoost (Extreme Gradient Boosting • Arbres Régularisés)</option>
+                  <option value="SVM">⚡ Support Vector Machine (Noyau RBF)</option>
+                  <option value="KNN">📍 K-Nearest Neighbors (k=5, pondéré)</option>
+                  <option value="Decision Tree">🌿 Decision Tree (Arbre CART)</option>
+                </optgroup>
+                <optgroup label="🧠 Deep Learning End-to-End (Tenseurs bruts PyTorch)">
+                  <option value="Integrated_EEGNet">🚀 M5: Modèle Intégré (Inception + Bi-LSTM + Focal + Aug) [Top DL • 66.1% Bal Acc]</option>
+                  <option value="EEGNet_BiLSTM">⏳ M4: EEGNet + Bi-LSTM (Séquence Temporelle • 82.8% Rappel Crise)</option>
+                  <option value="EEGNet_Focal">🎯 M1: EEGNet + Focal Loss (Alerte Avant-Crise • 74.2% Rappel)</option>
+                  <option value="EEGNet_Aug">🧬 M2: EEGNet + Data Augmentation (Moins de faux positifs • 44.4% F1)</option>
+                  <option value="Inception_EEGNet">📐 M3: Inception-EEGNet (Multi-Échelles 16/64/128)</option>
+                  <option value="EEGNet">🧠 M0: EEGNet Baseline (Lawhern et al., 2018)</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
+          <!-- Mode de Détection : 2 Classes vs 3 Classes (Avant Crise) -->
+          <div class="form-group" style="margin-top: 10px;">
+            <label for="classModeSelect" style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; display: block;">
+              🎯 Objectif & Mode de Détection Clinique :
+            </label>
+            <div class="select-wrapper">
+              <select id="classModeSelect">
+                <option value="3class" selected>⚡ Alerte Précoce 3 Classes (Sain vs Avant crise vs Crise)</option>
+                <option value="2class">🩺 Détection Binaire Standard (Sain [0] vs Crise [1])</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Durée de la Fenêtre d'Anticipation Pré-Ictale -->
+          <div class="form-group" id="groupPreIctalSec" style="margin-top: 10px;">
+            <label for="preIctalSecSelect" style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; display: block;">
+              ⏱️ Horizon Temporel d'Anticipation (« Avant Crise ») :
+            </label>
+            <div class="select-wrapper">
+              <select id="preIctalSecSelect">
+                <option value="10">⚡ 10 secondes (Alerte réflexe ultra-courte)</option>
+                <option value="30" selected>⭐ 30 secondes / 0.5 min (Équilibre optimal • 94.7% Bal Acc)</option>
+                <option value="60">🕒 60 secondes / 1 minute (Préavis étendu • 96.0% Rappel avant-crise)</option>
+                <option value="120">⏳ 120 secondes / 2 minutes (Anticipation longue)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Data Augmentation sur l'entraînement -->
+          <div class="form-group" style="margin-top: 10px;">
+            <label for="dataAugSelect" style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; display: block;">
+              🧬 Stratégie de Data Augmentation (Entraînement) :
+            </label>
+            <div class="select-wrapper">
+              <select id="dataAugSelect">
+                <option value="smote_scaling" selected>⭐ SMOTE + Magnitude Scaling (Recommandé : +18% rappel)</option>
+                <option value="smote">✨ SMOTE Standard (Interpolation synthétique k-NN)</option>
+                <option value="smote_jitter">🌊 SMOTE + Gaussian Jittering (Micro-bruit physiologique)</option>
+                <option value="hybrid">🔬 Hybride Complet (SMOTE + Jitter + Scaling)</option>
+                <option value="mixup">🔀 Mixup de Crises (Interpolation convexe)</option>
+                <option value="none">❌ Aucune Augmentation (Données brutes)</option>
               </select>
             </div>
           </div>
 
           <!-- Options d'améliorations cliniques -->
           <div class="form-group" style="margin-top: 10px;">
-            <label style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; display: block;">Améliorations cliniques appliquées (Partie XII) :</label>
+            <label style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; display: block;">Améliorations post-modélisation :</label>
             <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem;">
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="chkSMOTE" checked style="accent-color: var(--accent);">
-                <span>✨ Rééquilibrage SMOTE (Frontières nettes)</span>
-              </label>
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="chkTemporal" checked style="accent-color: var(--accent);">
                 <span>🛡️ Post-filtrage temporel clinique (Hystérésis &gt; 2s)</span>
@@ -261,6 +317,38 @@
             <span class="btn-spinner" id="trainSpinner"></span>
             <span class="btn-icon">⚡</span>
             <span class="btn-text">Entraîner le modèle choisi</span>
+          </button>
+        </div>
+
+        <!-- ÉTAPE 5 : Découpage & Fiabilité Inter-Patients -->
+        <div class="panel-section" id="sectionStep5" style="border: 1px solid var(--border-color); background: var(--bg-card); border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <h2 class="section-title" style="margin-bottom: 0; color: var(--purple);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              5. Découpage Inter-Patients
+            </h2>
+            <span class="step-badge-indicator" style="background: var(--purple-dim); color: var(--purple);">Généralisation</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+            Sépare les patients en <strong>2 groupes hermétiques</strong> (Train vs Test) avec normalisation Z-Score par patient pour tester la robustesse clinique réelle.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; font-size: 0.76rem;">
+            <div style="background: var(--bg-card); padding: 8px; border-radius: 6px; border: 1px solid var(--border);">
+              <div style="color: var(--accent); font-weight: 700; margin-bottom: 2px;">🎓 Groupe Train</div>
+              <div id="dispCrossTrainCount" style="color: var(--text-main); font-weight: 600;">16 Patients</div>
+              <div style="color: var(--text-muted); font-size: 0.7rem;">63 crises réelles</div>
+            </div>
+            <div style="background: var(--bg-card); padding: 8px; border-radius: 6px; border: 1px solid var(--border);">
+              <div style="color: #38bdf8; font-weight: 700; margin-bottom: 2px;">🏥 Groupe Test</div>
+              <div id="dispCrossTestCount" style="color: var(--text-main); font-weight: 600;">5 Patients</div>
+              <div style="color: var(--text-muted); font-size: 0.7rem;">16 crises invisibles</div>
+            </div>
+          </div>
+
+          <button id="btnCrossTrain" class="btn-step-action" style="width: 100%; background: var(--purple); color: white; border: 1px solid var(--purple); font-weight: 600; padding: 9px; margin-top: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+            <span class="btn-spinner" id="crossSpinner" style="display: none;"></span>
+            <span>🔬</span> Évaluer la Fiabilité Inter-Patients
           </button>
         </div>
 
@@ -298,7 +386,8 @@
           <div class="signal-legend">
             <div class="legend-item"><span class="legend-dot signal-line"></span> Tracé EEG brut (µV)</div>
             <div class="legend-item"><span class="legend-dot crisis-gt"></span> Crise Réelle (Vérité Terrain)</div>
-            <div class="legend-item"><span class="legend-dot crisis-pred"></span> Détection Modèle ML</div>
+            <div class="legend-item" id="legendPreIctal"><span class="legend-dot crisis-pre"></span> Avant Crise (10s pré-ictal)</div>
+            <div class="legend-item"><span class="legend-dot crisis-pred"></span> Alerte Prédite (Modèle ML)</div>
           </div>
 
           <!-- Canvas Container -->
@@ -333,6 +422,16 @@
               <div class="metric-bar-bg"><div class="metric-bar-fill fill-cyan" id="barRecall" style="width: 86.2%;"></div></div>
             </div>
 
+            <div class="metric-card glow-blue">
+              <div class="metric-header">
+                <span class="metric-title">Balanced Accuracy</span>
+                <span class="badge-priority" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">Anti-Biais</span>
+              </div>
+              <div class="metric-value" id="valBalancedAccuracy">91.2%</div>
+              <div class="metric-footer">(Sensibilité + Spécificité) / 2 sans distorsion</div>
+              <div class="metric-bar-bg"><div class="metric-bar-fill fill-blue" id="barBalancedAccuracy" style="width: 91.2%;"></div></div>
+            </div>
+
             <div class="metric-card glow-purple">
               <div class="metric-header">
                 <span class="metric-title">F1-Score</span>
@@ -355,7 +454,7 @@
 
             <div class="metric-card glow-amber">
               <div class="metric-header">
-                <span class="metric-title">Accuracy Globale</span>
+                <span class="metric-title">Accuracy Brute</span>
                 <span class="badge-warning">Biais Classe</span>
               </div>
               <div class="metric-value" id="valAccuracy">99.0%</div>
@@ -368,36 +467,20 @@
           <div class="dual-analytics-grid">
             <!-- Confusion Matrix Card -->
             <div class="analytics-box">
-              <h4 class="box-title">Matrice de Confusion (Jeu de Test : 624 fenêtres)</h4>
-              <div class="cm-table-wrapper">
-                <div class="cm-grid">
-                  <div class="cm-cell cm-header"></div>
-                  <div class="cm-cell cm-header-col">Prédit : Sain (0)</div>
-                  <div class="cm-cell cm-header-col">Prédit : Crise (1)</div>
-
-                  <div class="cm-cell cm-header-row">Réel : Sain (0)</div>
-                  <div class="cm-cell cm-val cell-vn">
-                    <span class="cm-num" id="cmVN">593</span>
-                    <span class="cm-lbl">Vrais Négatifs (VN)</span>
-                  </div>
-                  <div class="cm-cell cm-val cell-fp">
-                    <span class="cm-num" id="cmFP">2</span>
-                    <span class="cm-lbl">Faux Positifs (FP)</span>
-                  </div>
-
-                  <div class="cm-cell cm-header-row">Réel : Crise (1)</div>
-                  <div class="cm-cell cm-val cell-fn">
-                    <span class="cm-num" id="cmFN">4</span>
-                    <span class="cm-lbl">Faux Négatifs (FN)</span>
-                  </div>
-                  <div class="cm-cell cm-val cell-vp">
-                    <span class="cm-num" id="cmVP">25</span>
-                    <span class="cm-lbl">Vrais Positifs (VP)</span>
-                  </div>
-                </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <h4 class="box-title" id="cmTitle">Matrice de Confusion (Jeu de Test)</h4>
+                <span class="badge-priority" id="cmModeBadge" style="font-size: 0.7rem; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
+                  Mode 3 Classes
+                </span>
               </div>
-              <p class="analytics-note" id="cmClinicalComment">
-                Seulement 2 faux positifs sur l'enregistrement grâce au post-filtrage temporel et au rééquilibrage SMOTE.
+              <div class="cm-table-wrapper" id="cmTableWrapper">
+                <!-- Dynamically populated (2x2 or 3x3) -->
+              </div>
+              <div class="per-class-container" id="perClassContainer">
+                <!-- Dynamically populated per-class stats -->
+              </div>
+              <p class="analytics-note" id="cmClinicalComment" style="margin-top: 8px;">
+                Évaluation clinique sur fenêtres indépendantes avec post-filtrage temporel et rééquilibrage SMOTE.
               </p>
             </div>
 
@@ -459,7 +542,7 @@
                     <td>5 FP</td>
                   </tr>
                   <tr class="highlight-final">
-                    <td><strong>4. Système Optimisé Final (+ Post-Filtrage)</strong></td>
+                    <td><strong>4. Système Optimisé Final (Random Forest + Ratios + Post-Filtrage)</strong></td>
                     <td><strong>294</strong></td>
                     <td><strong>99.04 %</strong></td>
                     <td><strong>92.59 %</strong></td>
@@ -467,6 +550,185 @@
                     <td><strong>89.29 %</strong></td>
                     <td><strong>2 FP (Éradication)</strong></td>
                   </tr>
+                  <tr style="background: rgba(249, 115, 22, 0.08); border-left: 3px solid #f97316;">
+                    <td><strong>4b. Gradient Boosting (XGBoost + Ratios + Post-Filtrage)</strong> 🔥</td>
+                    <td>294</td>
+                    <td><strong>99.20 %</strong></td>
+                    <td><strong>92.86 %</strong></td>
+                    <td><strong>89.66 %</strong></td>
+                    <td><strong>91.23 %</strong></td>
+                    <td><strong>2 FP (Top F1 & Vitesse 13s)</strong></td>
+                  </tr>
+                  <tr>
+                    <td><strong>5. Deep Learning End-to-End (EEGNet PyTorch)</strong></td>
+                    <td>10 752 (Bruts)</td>
+                    <td>75.64 % (Bal)</td>
+                    <td>31.00 %</td>
+                    <td>75.64 %</td>
+                    <td>55.05 %</td>
+                    <td>Apprentissage convolutif direct sans extraction manuelle</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Synthèse Comparative de l'Étude d'Ablation Deep Learning -->
+          <div class="analytics-box progression-table-card" style="margin-top: 1.25rem; border: 1px solid rgba(56, 189, 248, 0.4); background: linear-gradient(180deg, rgba(56, 189, 248, 0.05), rgba(15, 23, 42, 0.4));">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+              <h4 class="box-title" style="color: #38bdf8; margin: 0;">
+                🔬 Étude d'Ablation Deep Learning : Comparaison Méthodologique (Recherche)
+              </h4>
+              <span class="badge-priority" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+                PyTorch Research Ablation
+              </span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
+              Évaluation comparative rigoureuse des 6 modules convolutifs et récurrents sur les signaux bruts 2D $(21 \times 512)$ en mode 3 classes (Horizon 30s) :
+            </p>
+            <div class="table-scroll">
+              <table class="table-progression">
+                <thead>
+                  <tr>
+                    <th>Module / Architecture</th>
+                    <th>Paramètres</th>
+                    <th>Balanced Acc</th>
+                    <th>F1-Macro</th>
+                    <th>Rappel Crise</th>
+                    <th>Rappel Avant-Crise</th>
+                    <th>Faux Positifs</th>
+                    <th>Apport Scientifique & Mécanisme</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>M0: Baseline EEGNet</strong></td>
+                    <td>2 211</td>
+                    <td>61.70 %</td>
+                    <td>40.91 %</td>
+                    <td>79.31 %</td>
+                    <td>65.15 %</td>
+                    <td>314 FP</td>
+                    <td>Modèle convolutif de référence (Lawhern et al., 2018)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>M1: EEGNet + Focal Loss (γ=2.0)</strong></td>
+                    <td>2 211</td>
+                    <td>56.10 %</td>
+                    <td>34.00 %</td>
+                    <td>65.52 %</td>
+                    <td><strong>74.24 %</strong></td>
+                    <td>378 FP</td>
+                    <td>Focalisation sur les exemples difficiles (Rappel Avant-Crise +9.1%)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>M2: EEGNet + Data Augmentation</strong></td>
+                    <td>2 211</td>
+                    <td>61.34 %</td>
+                    <td><strong>44.43 %</strong></td>
+                    <td>68.97 %</td>
+                    <td>62.12 %</td>
+                    <td><strong>249 FP</strong></td>
+                    <td>Éradication de 65 faux positifs (-21%) par Jittering/Scaling/Mixup</td>
+                  </tr>
+                  <tr>
+                    <td><strong>M3: Inception-EEGNet (Multi-Échelles)</strong></td>
+                    <td>3 571</td>
+                    <td>55.82 %</td>
+                    <td>42.51 %</td>
+                    <td>62.07 %</td>
+                    <td>56.06 %</td>
+                    <td>268 FP</td>
+                    <td>Découplage temporel Pointe 60ms vs Onde lente 3 Hz (500ms)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>M4: EEGNet + Bi-LSTM (Séquentiel)</strong></td>
+                    <td>14 435</td>
+                    <td>65.50 %</td>
+                    <td>40.97 %</td>
+                    <td><strong>82.76 %</strong></td>
+                    <td>72.73 %</td>
+                    <td>312 FP</td>
+                    <td>Modélisation récurrente bidirectionnelle de la chronologie intra-fenêtre</td>
+                  </tr>
+                  <tr class="highlight-final" style="background: rgba(56, 189, 248, 0.12); border-left: 3px solid #38bdf8;">
+                    <td><strong>M5: Modèle Intégré (Inception+LSTM+Focal+Aug)</strong></td>
+                    <td><strong>17 459</strong></td>
+                    <td><strong>66.07 %</strong></td>
+                    <td><strong>41.69 %</strong></td>
+                    <td><strong>82.76 %</strong></td>
+                    <td><strong>74.24 %</strong></td>
+                    <td>311 FP</td>
+                    <td><strong>Top Deep Learning : Synergie complète (Meilleure Bal Acc & Rappels)</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ANALYSE CLINIQUE INTER-PATIENTS (GÉNÉRALISATION SUR PATIENTS NON VUS) -->
+          <div class="analytics-box" id="crossPatientResultsCard" style="display: none; margin-top: 1.25rem; border: 1px solid rgba(139, 92, 246, 0.4); background: linear-gradient(180deg, rgba(139, 92, 246, 0.06), rgba(15, 23, 42, 0.4));">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+              <div>
+                <h4 class="box-title" style="color: var(--purple); margin-bottom: 2px;">
+                  🔬 Résultats de Validation Inter-Patients (Généralisation Clinique)
+                </h4>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">
+                  Évaluation sur des patients <strong>entièrement exclus de l'entraînement</strong> (Normalisation Z-Score intra-patient + SMOTE Train)
+                </p>
+              </div>
+              <span class="badge-priority" style="background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(139, 92, 246, 0.4);">
+                Zero Data Leakage ✓
+              </span>
+            </div>
+
+            <!-- Mini KPIs Inter-Patients -->
+            <div class="metrics-grid" style="margin-bottom: 1rem;">
+              <div class="metric-card" style="padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Sensibilité (Recall)</div>
+                <div id="crossValRecall" style="font-size: 1.4rem; font-weight: 700; color: #38bdf8;">79.2%</div>
+                <div style="font-size: 0.68rem; color: var(--text-dim);">160 crises détectées sur 202</div>
+              </div>
+              <div class="metric-card" style="padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Balanced Accuracy</div>
+                <div id="crossValBalAcc" style="font-size: 1.4rem; font-weight: 700; color: var(--cyan);">88.2%</div>
+                <div style="font-size: 0.68rem; color: var(--text-dim);">(Sensibilité + Spécificité) / 2</div>
+              </div>
+              <div class="metric-card" style="padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">F1-Score Global</div>
+                <div id="crossValF1" style="font-size: 1.4rem; font-weight: 700; color: var(--purple);">59.5%</div>
+                <div style="font-size: 0.68rem; color: var(--text-dim);">Patients non vus</div>
+              </div>
+              <div class="metric-card" style="padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Précision</div>
+                <div id="crossValPrecision" style="font-size: 1.4rem; font-weight: 700; color: #34d399;">47.6%</div>
+                <div style="font-size: 0.68rem; color: var(--text-dim);">Faible taux de fausse alerte</div>
+              </div>
+              <div class="metric-card" style="padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Accuracy Brute</div>
+                <div id="crossValAccuracy" style="font-size: 1.4rem; font-weight: 700; color: #fbbf24;">96.5%</div>
+                <div style="font-size: 0.68rem; color: var(--text-dim);">Sur 6 279 fenêtres test</div>
+              </div>
+            </div>
+
+            <!-- Tableau détaillé par patient de test -->
+            <h5 style="font-size: 0.8rem; color: var(--text-dim); margin: 0 0 6px 0;">Détail des performances par patient du Groupe Test :</h5>
+            <div class="table-scroll">
+              <table class="table-progression">
+                <thead>
+                  <tr>
+                    <th>Patient (Non vu)</th>
+                    <th>Nb Crises</th>
+                    <th>Fenêtres Crise</th>
+                    <th>Balanced Acc</th>
+                    <th>Sensibilité (Recall)</th>
+                    <th>Précision</th>
+                    <th>F1-Score</th>
+                    <th>Statut Clinique</th>
+                  </tr>
+                </thead>
+                <tbody id="crossPatientTableBody">
+                  <!-- Dynamically populated -->
                 </tbody>
               </table>
             </div>
@@ -476,7 +738,7 @@
           <div class="dual-analytics-grid" style="margin-top: 1.25rem;">
             <!-- Feature Importance -->
             <div class="analytics-box">
-              <h4 class="box-title">Importance des Descripteurs (Poids Décisionnel)</h4>
+              <h4 class="box-title">Importance des Descripteurs (Gini RF / Poids Spatiaux EEGNet)</h4>
               <div class="feature-importance-list" id="featureImportanceList">
                 <!-- Dynamically generated bars -->
               </div>
@@ -511,6 +773,6 @@
     <div class="toast-container" id="toastContainer"></div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=comfort2"></script>
 </body>
 </html>

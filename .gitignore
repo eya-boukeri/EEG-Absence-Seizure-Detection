@@ -12,9 +12,14 @@ __pycache__/
 */.ipynb_checkpoints/*
 
 # Fichiers de données volumineux (> 100 Mo rejetés par GitHub)
-# Les signaux EEG bruts (.csv) font entre 100 Mo et 380 Mo chacun
+# Les signaux EEG bruts (.csv) et acquisitions (.mat)
 data/*.csv
 data/**/*.csv
+data/*.mat
+data/**/*.mat
+
+# Scripts de test et brouillons temporaires
+scratch/
 
 # Fichiers temporaires et sorties
 output/*

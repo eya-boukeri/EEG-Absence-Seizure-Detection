@@ -15,6 +15,20 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
+# Détection et bascule automatique vers l'environnement virtuel .venv si numpy n'est pas dans le Python global
+try:
+    import numpy
+except ImportError:
+    venv_py = os.path.join(ROOT_DIR, ".venv", "Scripts", "python.exe")
+    if not os.path.exists(venv_py):
+        venv_py = os.path.join(ROOT_DIR, ".venv", "bin", "python")
+    if os.path.exists(venv_py) and os.path.abspath(sys.executable).lower() != os.path.abspath(venv_py).lower():
+        import subprocess
+        print(f"[Dashboard] Bascule automatique vers l'environnement virtuel du projet : {venv_py}")
+        sys.exit(subprocess.call([venv_py] + sys.argv))
+    else:
+        raise
+
 import engine
 
 PORT = 5050
@@ -61,6 +75,15 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             status = engine.get_pipeline_status()
             self.wfile.write(json.dumps(status).encode('utf-8'))
+            return
+
+        elif path == '/api/cross_patient/split':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            split_info = engine.get_cross_patient_split()
+            self.wfile.write(json.dumps(split_info).encode('utf-8'))
             return
 
         elif path in ['/api/pipeline/clean', '/api/pipeline/cleaning_summary']:
@@ -163,9 +186,12 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             patient_id = data.get('patient_id')
             signal_file = data.get('signal_file')
             annotation_file = data.get('annotation_file')
+            include_pre_ictal = data.get('include_pre_ictal', False)
+            pre_ictal_sec = float(data.get('pre_ictal_sec', 10.0))
 
             try:
-                engine.load_data(patient_id=patient_id, signal_file=signal_file, annotation_file=annotation_file)
+                engine.load_data(patient_id=patient_id, signal_file=signal_file, annotation_file=annotation_file,
+                                 include_pre_ictal=include_pre_ictal, pre_ictal_sec=pre_ictal_sec)
                 res = engine.get_cleaning_summary()
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -181,7 +207,18 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             return
 
         elif parsed.path in ['/api/pipeline/extract']:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else "{}"
             try:
+                data = json.loads(body)
+            except Exception:
+                data = {}
+            include_pre_ictal = data.get('include_pre_ictal', False)
+            pre_ictal_sec = float(data.get('pre_ictal_sec', 10.0))
+
+            try:
+                if include_pre_ictal:
+                    engine.load_data(include_pre_ictal=include_pre_ictal, pre_ictal_sec=pre_ictal_sec)
                 res = engine.get_features_summary()
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -216,10 +253,62 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             channel = data.get('channel', 'ALL')
             model_name = data.get('model', 'Random Forest')
             use_smote = data.get('use_smote', True)
+            data_aug = data.get('data_augmentation')
             use_temporal_filter = data.get('use_temporal_filter', True)
+            include_pre_ictal = data.get('include_pre_ictal', False)
+            pre_ictal_sec = float(data.get('pre_ictal_sec', 10.0))
 
             try:
-                res = engine.train_and_evaluate(channel, model_name, use_smote=use_smote, use_temporal_filter=use_temporal_filter)
+                res = engine.train_and_evaluate(
+                    channel, 
+                    model_name, 
+                    use_smote=use_smote, 
+                    data_augmentation=data_aug, 
+                    use_temporal_filter=use_temporal_filter,
+                    include_pre_ictal=include_pre_ictal,
+                    pre_ictal_sec=pre_ictal_sec
+                )
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
+            return
+
+        elif parsed.path in ['/api/cross_patient/train', '/api/pipeline/cross_patient']:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8')
+            try:
+                data = json.loads(body)
+            except Exception:
+                data = {}
+
+            train_pids = data.get('train_patients')
+            test_pids = data.get('test_patients')
+            model_name = data.get('model', 'Random Forest')
+            use_smote = data.get('use_smote', True)
+            data_aug = data.get('data_augmentation')
+            use_temporal_filter = data.get('use_temporal_filter', True)
+            include_pre_ictal = data.get('include_pre_ictal', False)
+            pre_ictal_sec = float(data.get('pre_ictal_sec', 10.0))
+
+            try:
+                res = engine.train_and_evaluate_cross_patient(
+                    train_patients=train_pids,
+                    test_patients=test_pids,
+                    model_name=model_name,
+                    use_smote=use_smote,
+                    data_augmentation=data_aug,
+                    use_temporal_filter=use_temporal_filter,
+                    include_pre_ictal=include_pre_ictal,
+                    pre_ictal_sec=pre_ictal_sec
+                )
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json; charset=utf-8')
                 self.send_header('Access-Control-Allow-Origin', '*')
